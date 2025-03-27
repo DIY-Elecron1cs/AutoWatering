@@ -7,7 +7,7 @@
 
 /*---пины---*/
 #define SENSOR A0
-#define PUMP 2
+#define PUMP 9
 
 #define RTC_CLK 4
 #define RTC_DATA 5
@@ -18,9 +18,13 @@
 #define ENC_SW 6
 
 /*---настройки---*/
+#define PUMP_PWM 220
+#define RELAY 1
+#define PUMP_PULSE_PERIOD 1500
+#define PUMP_MINUTES 5
 #define _LCD_TYPE 1
 #define RESET_CLOCK 0   //1 - установить время
-#define WEEK_DAY 5      //текущий день недели
+#define WEEK_DAY 4      //текущий день недели
 #define DEBUG 0         //для отладки в мониторе порта
 
 /*---библиотеки---*/
@@ -45,6 +49,8 @@ uint8_t wateringDay = 1;
 uint8_t wateringTime = 12;
 uint8_t humidity;
 uint8_t humidityLevel = 50;
+uint32_t pumpPulseTimer;
+bool pumpPulseFlag = 0;
 
 
 /*---битмапы---*/
@@ -338,16 +344,20 @@ void readEEPROM() {              //читаем из EEPROM
 }
 
 void watering() {         //полив
-  if (wateringStatus(myRTC.dayofmonth, myRTC.month, wateringDay) == true && myRTC.hours == wateringTime) {    //если надо поливать
+  if (wateringStatus(myRTC.dayofmonth, myRTC.month, wateringDay) == true && myRTC.hours == wateringTime && myRTC.minutes < PUMP_MINUTES) {    //если надо поливать
     if (humidity < humidityLevel) {     //если почва сухая
-      digitalWrite(PUMP, HIGH);         //включаем помпу
+      if (millis() - pumpPulseTimer >= PUMP_PULSE_PERIOD) {
+        pumpPulseTimer = millis();
+        pumpWork(pumpPulseFlag);
+        pumpPulseFlag = !pumpPulseFlag;
+      }
       pumpState = 1;
 #if DEBUG == 1
       Serial.println("Идёт полив...");
 #endif
     }
-    else {                              //если почва влажная
-      digitalWrite(PUMP, LOW);          //выключаем помпу
+    else {            //если почва влажная
+      pumpWork(LOW);
       pumpState = 0;
 #if DEBUG == 1
       Serial.println("Полив завершён.");
@@ -355,11 +365,10 @@ void watering() {         //полив
     }
   }
   else {
-    digitalWrite(PUMP, LOW);            //выключаем помпу
+    pumpWork(LOW);    //выключаем помпу
     pumpState = 0;
   }
 }
-
 
 bool wateringStatus(int day, int month, int wateringFrequency) {      //проверяем, нужно ли сегодня поливать
   if (day < 1 || day > 31 || month < 1 || month > 12) {               //исключения
@@ -371,4 +380,15 @@ bool wateringStatus(int day, int month, int wateringFrequency) {      //пров
     dayOfYear += daysInMonth[i];      //определяем, какой сейчас день в году по счёту
   }
   return (dayOfYear % wateringFrequency == 0);    //проверяем делимость
+}
+
+void pumpWork(bool state) {
+#if RELAY == 1
+  digitalWrite(PUMP, state);
+#else
+  if (state == HIGH)
+    analogWrite(PUMP, PUMP_PWM);
+  else
+    analogWrite(PUMP, 0);
+#endif
 }
