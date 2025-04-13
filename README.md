@@ -1,3 +1,6 @@
+[![Foo](https://img.shields.io/badge/ПОДПИСАТЬСЯ-НА%20ОБНОВЛЕНИЯ-brightgreen.svg?style=social&logo=telegram&color=blue)](https://t.me/de_libs)
+
+
 # AutoWatering
 Автополив на arduino.
 В репозитории содержится только код. Проект в моём исполнении оказался неудачным с точки зрения механики и схемотехники.
