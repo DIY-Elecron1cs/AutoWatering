@@ -26,3 +26,5 @@ DEBUG – ставится в 1 для отладки в мониторе пор
 
 ## фото
 ![stand](https://github.com/DIY-Elecron1cs/AutoWatering/blob/main/images/auto-watering-stand.jpg?raw=true)
+
+По вопросам писать в [чат DIY electronics](https://t.me/diy_electronics_chat) или на [почту](mailto:diy-electronics@mail.ru).
